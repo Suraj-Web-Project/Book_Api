@@ -1,0 +1,175 @@
+openapi: 3.0.0
+info:
+  title: Books API
+  description: A minimal Node.js REST API to manage and explore books.
+  version: 1.0.0
+servers:
+  - url: http://localhost:3000
+    description: Local Development Server
+
+paths:
+  /books:
+    get:
+      summary: Explore Books (Search, Filter, Sort, Paginate)
+      description: |
+        The main endpoint for discovery. Allows combining search, filtering, and sorting 
+        in a single request.
+      parameters:
+        - in: query
+          name: search
+          schema:
+            type: string
+          description: Search text in name or description (case-insensitive)
+        - in: query
+          name: author
+          schema:
+            type: string
+          description: Exact author match (case-insensitive)
+        - in: query
+          name: from
+          schema:
+            type: string
+            format: date
+          description: Filter books published after this date (YYYY-MM-DD)
+        - in: query
+          name: to
+          schema:
+            type: string
+            format: date
+          description: Filter books published before this date (YYYY-MM-DD)
+        - in: query
+          name: page
+          schema:
+            type: integer
+            default: 1
+          description: Page number for pagination
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            default: 10
+            maximum: 50
+          description: Number of items per page (Max 50)
+        - in: query
+          name: sortBy
+          schema:
+            type: string
+            enum: [name, author, publishDate]
+            default: name
+          description: Field to sort results by
+        - in: query
+          name: order
+          schema:
+            type: string
+            enum: [asc, desc]
+            default: asc
+          description: Sort direction (ascending or descending)
+      responses:
+        '200':
+          description: Successful response with pagination metadata
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  total:
+                    type: integer
+                    example: 16
+                  page:
+                    type: integer
+                    example: 1
+                  limit:
+                    type: integer
+                    example: 10
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Book'
+
+    post:
+      summary: Create a new Book
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - name
+                - author
+                - description
+              properties:
+                name:
+                  type: string
+                  example: "The Great Gatsby"
+                author:
+                  type: string
+                  example: "F. Scott Fitzgerald"
+                description:
+                  type: string
+                  example: "A novel about the American dream."
+                publishDate:
+                  type: string
+                  format: date
+                  example: "1925-04-10"
+      responses:
+        '201':
+          description: Book created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Book'
+        '400':
+          description: Missing required fields
+        '409':
+          description: Book already exists
+
+  /books/{id}:
+    get:
+      summary: Get a book by ID
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+          description: The MongoDB Object ID of the book
+      responses:
+        '200':
+          description: Book details returned successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Book'
+        '404':
+          description: Book not found
+        '500':
+          description: Invalid ID format
+
+components:
+  schemas:
+    Book:
+      type: object
+      properties:
+        _id:
+          type: string
+          example: "697f6117ceff389c95f2415a"
+        name:
+          type: string
+          example: "The Great Gatsby"
+        author:
+          type: string
+          example: "F. Scott Fitzgerald"
+        description:
+          type: string
+          example: "A novel about the American dream."
+        publishDate:
+          type: string
+          format: date
+          example: "1925-04-10"
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
